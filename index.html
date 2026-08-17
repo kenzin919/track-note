@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111827"><meta name="description" content="陸上競技の練習・大会・自己ベストを記録できるTrack Note">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Track Note</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f3f4f6;color:#111827;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+header{background:#111827;color:#fff;padding:16px 18px;position:sticky;top:0;z-index:5}header b{font-size:21px}header small{display:block;color:#cbd5e1;margin-top:3px}
+main{max-width:760px;margin:auto;padding:16px 16px 90px}.screen{display:none}.screen.active{display:block}h1{font-size:24px}h2{font-size:18px}
+.card,.panel,.item,.stat{background:#fff;border-radius:15px;padding:15px;margin:10px 0;box-shadow:0 1px 4px #0001}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.stat b{display:block;font-size:28px;margin-top:5px}
+.stat small,.muted,small{color:#6b7280}label{font-size:13px;font-weight:700;display:block;margin:11px 0}input,select,textarea{width:100%;padding:12px;border:1px solid #d1d5db;border-radius:10px;font-size:16px;margin-top:6px}textarea{min-height:80px}
+button{border:0;border-radius:11px;padding:12px 15px;background:#e5e7eb;font-weight:700;cursor:pointer}.primary{background:#2563eb;color:white}.danger{color:#dc2626}.row{display:flex;gap:8px}.row>*{flex:1}
+nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #ddd;display:flex;z-index:10}nav button{flex:1;background:none;border-radius:0;padding:9px 2px;font-size:11px;color:#6b7280}nav button.active{color:#2563eb}
+canvas{width:100%;height:230px}.badge{display:inline-block;background:#dcfce7;color:#166534;padding:3px 7px;border-radius:999px;font-size:11px;font-weight:700}
+
+.profile-card{text-align:center}.avatar-wrap{width:112px;height:112px;margin:5px auto 15px;position:relative}.avatar,.avatar-placeholder{width:112px;height:112px;border-radius:50%;object-fit:cover;background:#e5e7eb}.avatar-placeholder{display:flex;align-items:center;justify-content:center;font-size:46px}.mini-avatar{width:48px;height:48px;border-radius:50%;object-fit:cover;background:#e5e7eb;margin-right:12px}.item{display:flex;align-items:center;gap:10px}.item>div{display:flex;flex-direction:column}
+
+.home-profile{background:#fff;border-radius:16px;padding:12px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 4px #0001;cursor:pointer}.home-avatar{width:52px;height:52px;border-radius:50%;object-fit:cover;background:#e5e7eb}.home-profile small{display:block;color:#6b7280;margin-top:3px}.member-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #eee}.member-avatar{width:42px;height:42px;border-radius:50%;object-fit:cover;background:#e5e7eb}.member-row:last-child{border-bottom:0}
+</style>
+</head>
+<body>
+<header><div><b>Track Note</b><small>陸上競技の記録・練習・大会管理</small></div><button id="installBtn" style="display:none;background:#fff;color:#111827;padding:8px 10px">インストール</button></header>
+<main>
+<section id="home" class="screen active">
+<div class="home-profile" onclick="show('settings')">
+  <img id="homeAvatar" class="home-avatar">
+  <div><b id="homePlayer">選手</b><small>プロフィールを見る →</small></div>
+</div>
+<h1>ホーム</h1><div class="grid"><div class="stat"><small>練習</small><b id="wc">0</b></div><div class="stat"><small>大会</small><b id="mc">0</b></div></div><h2>自己ベスト</h2><div id="homePB"></div><h2>最近の大会</h2><div id="homeMeet"></div></section>
+
+<section id="workout" class="screen"><h1>練習を記録</h1><div class="panel">
+<label>日付<input id="wd" type="date"></label><label>種目<select id="we"><option>100m</option><option>200m</option><option>400m</option><option>800m</option><option>1500m</option><option>3000m</option><option>5000m</option><option>10000m</option></select></label>
+<label>メニュー<input id="wm" placeholder="例：200m × 6"></label><label>タイム（カンマ区切り）<input id="wt" placeholder="25.1, 25.3, 25.5"></label><label>RPE<input id="wr" type="number" min="1" max="10"></label><label>メモ<textarea id="wn"></textarea></label><button class="primary" style="width:100%" onclick="saveWorkout()">保存</button>
+</div><div id="workoutList"></div></section>
+
+<section id="records" class="screen"><h1>記録・大会</h1><div class="panel">
+<h2>大会結果</h2><label>大会名<input id="mn" placeholder="例：県選手権"></label><label>日付<input id="md" type="date"></label>
+<label>種目<select id="me"><option>100m</option><option>200m</option><option>400m</option><option>800m</option><option>1500m</option><option>3000m</option><option>5000m</option><option>10000m</option></select></label>
+<label>ラウンド<select id="mr"><option>予選</option><option>準決勝</option><option>決勝</option><option>タイムレース</option></select></label><label>記録<input id="mt" type="number" step=".01" placeholder="11.82"></label><label>風速<input id="mw" type="number" step=".1" placeholder="+1.2"></label>
+<label><input id="mo" type="checkbox" checked> 公認記録</label><label>メモ<textarea id="mm"></textarea></label><button class="primary" style="width:100%" onclick="saveMeet()">大会結果を保存</button>
+</div><div class="panel"><h2>記録推移</h2><select id="ce" onchange="draw()"><option>100m</option><option>200m</option><option>400m</option><option>800m</option><option>1500m</option><option>3000m</option><option>5000m</option></select><canvas id="chart"></canvas></div><div id="meetList"></div></section>
+
+<section id="group" class="screen"><h1>グループ</h1><div id="groupArea"></div></section>
+
+<section id="settings" class="screen"><h1>プロフィール</h1>
+<div class="panel profile-card">
+  <div class="avatar-wrap"><img id="avatarPreview" class="avatar" alt="プロフィール画像"><div class="avatar-placeholder" id="avatarPlaceholder">👤</div></div>
+  <label>プロフィール写真<input id="avatarInput" type="file" accept="image/*"></label>
+  <label>選手名<input id="player"></label>
+  <button class="primary" style="width:100%" onclick="saveProfile()">プロフィールを保存</button>
+</div>
+<div class="panel"><h2>プロフィール</h2><div class="item"><img id="miniAvatar" class="mini-avatar"><div><b id="profileName">未設定</b><small>Track Note 選手プロフィール</small></div></div></div>
+<button class="danger" onclick="resetAll()">すべてのデータを削除</button>
+</section>
+</main>
+<nav><button data-s="home">🏠<br>ホーム</button><button data-s="workout">➕<br>練習</button><button data-s="records">📋<br>記録・大会</button><button data-s="group">👥<br>グループ</button><button data-s="settings">⚙️<br>設定</button></nav>
+<script>
+const K={w:'tn_w',m:'tn_m',p:'tn_p',g:'tn_g',u:'tn_u',a:'tn_avatar'};
+const get=k=>JSON.parse(localStorage.getItem(K[k])||'[]'),put=(k,v)=>localStorage.setItem(K[k],JSON.stringify(v));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const today=()=>new Date().toISOString().slice(0,10);
+wd.value=md.value=today(); player.value=localStorage.getItem(K.u)||'';
+document.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>show(b.dataset.s));
+function show(id){document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x.dataset.s===id));render()}
+function savePlayer(){localStorage.setItem(K.u,player.value);alert('選手名を保存しました');render()}
+function saveWorkout(){if(!wm.value)return alert('メニューを入力してください');let a=get('w');a.unshift({id:uid(),date:wd.value,event:we.value,menu:wm.value,times:wt.value.split(',').map(x=>Number(x.trim())).filter(Number.isFinite),rpe:wr.value,note:wn.value});put('w',a);wm.value=wt.value=wr.value=wn.value='';render()}
+function saveMeet(){
+ if(!mn.value||!mt.value)return alert('大会名と記録を入力してください');
+ let a=get('m'),p=get('p'),t=Number(mt.value),ev=me.value,old=p.find(x=>x.event===ev),isPB=!old||t<old.time;
+ a.unshift({id:uid(),date:md.value,name:mn.value,event:ev,round:mr.value,time:t,wind:mw.value,official:mo.checked,note:mm.value,isPB});
+ if(isPB){p=p.filter(x=>x.event!==ev);p.push({event:ev,time:t,date:md.value,source:'大会',meet:mn.value});put('p',p)}
+ put('m',a);
+ alert(isPB?'🏆 PB更新！ '+ev+' '+t.toFixed(2)+'秒':'大会結果を保存しました');
+ mn.value=mt.value=mw.value=mm.value='';render();
+}
+function draw(){
+ const c=document.getElementById('chart');if(!c)return;let d=get('m').filter(x=>x.event===ce.value).sort((a,b)=>a.date.localeCompare(b.date));let w=c.clientWidth||600,h=230,dpr=devicePixelRatio||1;c.width=w*dpr;c.height=h*dpr;let x=c.getContext('2d');x.scale(dpr,dpr);x.clearRect(0,0,w,h);
+ if(!d.length){x.fillStyle='#6b7280';x.fillText('この種目の記録はありません',20,30);return}
+ let v=d.map(a=>a.time),lo=Math.min(...v),hi=Math.max(...v),span=Math.max(.2,hi-lo),L=42,R=15,T=15,B=38;
+ x.strokeStyle='#d1d5db';x.beginPath();x.moveTo(L,T);x.lineTo(L,h-B);x.lineTo(w-R,h-B);x.stroke();
+ x.strokeStyle='#2563eb';x.lineWidth=2.5;x.beginPath();d.forEach((a,i)=>{let px=d.length===1?w/2:L+(w-L-R)*i/(d.length-1),py=T+(h-T-B)*(a.time-lo)/(span);i?x.lineTo(px,py):x.moveTo(px,py)});x.stroke();
+ d.forEach((a,i)=>{let px=d.length===1?w/2:L+(w-L-R)*i/(d.length-1),py=T+(h-T-B)*(a.time-lo)/(span);x.fillStyle='#2563eb';x.beginPath();x.arc(px,py,4,0,7);x.fill();x.fillStyle='#111827';x.font='11px sans-serif';x.textAlign='center';x.fillText(a.time.toFixed(2),px,py-8);x.fillStyle='#6b7280';x.fillText(a.date.slice(5),px,h-14)})
+}
+function group(){
+ let g=JSON.parse(localStorage.getItem(K.g)||'null');
+ if(!g){
+  groupArea.innerHTML='<div class="panel"><h2>グループを作る</h2><label>グループ名<input id="gn" placeholder="例：○○高校 陸上部"></label><label>自分の名前<input id="gm"></label><button class="primary" style="width:100%" onclick="createGroup()">作成</button></div><div class="panel"><h2>招待コードで参加</h2><label>コード<input id="jc" placeholder="RUN-AB12"></label><label>自分の名前<input id="jm"></label><button style="width:100%" onclick="joinGroup()">参加</button></div>';
+  return;
+ }
+ const avatar=localStorage.getItem(K.a);
+ const me=localStorage.getItem(K.u)||'選手';
+ const members=g.members||[];
+ let memberHtml=members.map((name,i)=>{
+   const img=(i===0&&avatar)?`<img class="member-avatar" src="${avatar}">`:`<div class="member-avatar" style="display:flex;align-items:center;justify-content:center;font-size:20px">👤</div>`;
+   return `<div class="member-row">${img}<div><b>${esc(name)}</b><small>${i===0?'自分':'グループメンバー'}</small></div></div>`;
+ }).join('');
+ let records=get('m');
+ groupArea.innerHTML=`<div class="panel"><h2>${esc(g.name)}</h2><p>招待コード：<b>${esc(g.code)}</b></p><button onclick="copyCode()">招待コードをコピー</button></div>
+ <div class="panel"><h2>メンバー</h2>${memberHtml||'<p class="muted">まだメンバーがいません。</p>'}</div>
+ <h2>共有フィード</h2>${records.slice(0,10).map(x=>'<div class="item"><b>'+esc(x.name)+' / '+esc(x.event)+' / '+x.time.toFixed(2)+'秒</b><small>'+x.date+(x.isPB?'　🏆 PB':'')+'</small></div>').join('')||'<p class="muted">まだ共有記録がありません。</p>'}`;
+}
+function createGroup(){if(!gn.value||!gm.value)return alert('入力してください');put('g',{name:gn.value,code:'RUN-'+Math.random().toString(36).slice(2,6).toUpperCase(),members:[gm.value]});render()}
+function joinGroup(){if(!jc.value||!jm.value)return alert('入力してください');put('g',{name:'参加グループ',code:jc.value.toUpperCase(),members:[jm.value]});render();alert('参加しました（この試作版では同じ端末内の共有です）')}
+function copyCode(){let g=JSON.parse(localStorage.getItem(K.g));navigator.clipboard?.writeText(g.code);alert('招待コード：'+g.code)}
+function saveProfile(){
+ localStorage.setItem(K.u,player.value.trim()||'選手');
+ render();
+ alert('プロフィールを保存しました！');
+ show('settings');
+}
+document.getElementById('avatarInput').addEventListener('change',e=>{
+ const file=e.target.files?.[0]; if(!file)return;
+ if(file.size>4*1024*1024)return alert('写真は4MB以下にしてください');
+ const reader=new FileReader();
+ reader.onload=()=>{localStorage.setItem(K.a,reader.result);render();show('settings')};
+ reader.readAsDataURL(file);
+});
+function resetAll(){if(confirm('すべて削除しますか？')){Object.values(K).forEach(k=>localStorage.removeItem(k));location.reload()}}
+function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+function render(){
+ let w=get('w'),m=get('m'),p=get('p');
+ wc.textContent=w.length;mc.textContent=m.length;
+ homePB.innerHTML=p.length?p.map(x=>'<div class="card"><b>'+esc(x.event)+'</b><strong>'+x.time.toFixed(2)+'秒</strong><small>'+x.date+'　'+esc(x.meet)+'</small></div>').join(''):'<p class="muted">大会結果を登録すると自動でPBになります。</p>';
+ homeMeet.innerHTML=m.slice(0,5).map(x=>'<div class="item"><b>'+x.date+'　'+esc(x.event)+'　'+x.time.toFixed(2)+'秒 '+(x.isPB?'<span class="badge">PB</span>':'')+'</b><small>'+esc(x.name)+'</small></div>').join('')||'<p class="muted">まだありません。</p>';
+ workoutList.innerHTML=w.slice(0,10).map(x=>'<div class="item"><b>'+x.date+'　'+x.event+'</b><small>'+esc(x.menu)+'　'+x.times.join(' / ')+'</small></div>').join('');
+ meetList.innerHTML=m.map(x=>'<div class="item"><b>'+x.date+'　'+esc(x.event)+'　'+x.time.toFixed(2)+'秒 '+(x.isPB?'<span class="badge">PB</span>':'')+'</b><small>'+esc(x.name)+' ・ '+esc(x.round)+(x.wind?' ・ 風 '+x.wind+'m/s':'')+' ・ '+(x.official?'公認':'非公認')+'</small></div>').join('')||'<p class="muted">大会結果がありません。</p>';
+ group();
+ const avatar=localStorage.getItem(K.a), name=localStorage.getItem(K.u)||'未設定';
+ const ap=document.getElementById('avatarPreview'), aph=document.getElementById('avatarPlaceholder'), ma=document.getElementById('miniAvatar');
+ if(ap&&aph){if(avatar){ap.src=avatar;ap.style.display='block';aph.style.display='none'}else{ap.style.display='none';aph.style.display='flex'}}
+ if(ma){if(avatar){ma.src=avatar;ma.style.display='block'}else{ma.style.display='none'}}
+ const pn=document.getElementById('profileName');if(pn)pn.textContent=name;
+ const hp=document.getElementById('homeAvatar'), hn=document.getElementById('homePlayer');
+ if(hp){hp.src=avatar||'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" rx="50" fill="#e5e7eb"/><text x="50" y="63" text-anchor="middle" font-size="45">👤</text></svg>')}
+ if(hn)hn.textContent=name;
+
+ const pi=document.getElementById('player');if(pi)pi.value=name==='未設定'?'':name;
+ if(document.getElementById('records').classList.contains('active'))draw()
+}
+show('home');
+window.onresize=()=>draw();
+if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;const b=document.getElementById('installBtn');if(b)b.style.display='block'});
+document.getElementById('installBtn')?.addEventListener('click',async()=>{if(!deferredPrompt)return;deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;document.getElementById('installBtn').style.display='none'});
+</script>
+</body></html>
