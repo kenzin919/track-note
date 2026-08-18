@@ -2,10 +2,10 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#111827"><meta name="description" content="陸上競技の練習・大会・自己ベストを記録できるTrack Note">
+<meta name="theme-color" content="#111827"><meta name="description" content="陸上競技の練習・大会・自己ベストを記録できる陸メモ">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>Track Note</title>
+<title>陸メモ</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#f3f4f6;color:#111827;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 header{background:#111827;color:#fff;padding:16px 18px;position:sticky;top:0;z-index:5}header b{font-size:21px}header small{display:block;color:#cbd5e1;margin-top:3px}
@@ -19,17 +19,26 @@ canvas{width:100%;height:230px}.badge{display:inline-block;background:#dcfce7;co
 .profile-card{text-align:center}.avatar-wrap{width:112px;height:112px;margin:5px auto 15px;position:relative}.avatar,.avatar-placeholder{width:112px;height:112px;border-radius:50%;object-fit:cover;background:#e5e7eb}.avatar-placeholder{display:flex;align-items:center;justify-content:center;font-size:46px}.mini-avatar{width:48px;height:48px;border-radius:50%;object-fit:cover;background:#e5e7eb;margin-right:12px}.item{display:flex;align-items:center;gap:10px}.item>div{display:flex;flex-direction:column}
 
 .home-profile{background:#fff;border-radius:16px;padding:12px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 4px #0001;cursor:pointer}.home-avatar{width:52px;height:52px;border-radius:50%;object-fit:cover;background:#e5e7eb}.home-profile small{display:block;color:#6b7280;margin-top:3px}.member-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #eee}.member-avatar{width:42px;height:42px;border-radius:50%;object-fit:cover;background:#e5e7eb}.member-row:last-child{border-bottom:0}
+
+.chat-wrap{display:flex;flex-direction:column;gap:10px}
+.chat-messages{height:360px;overflow:auto;background:#f8fafc;border-radius:14px;padding:12px;border:1px solid #e5e7eb}
+.msg{display:flex;gap:8px;margin:9px 0;align-items:flex-end}.msg.mine{justify-content:flex-end}.msg-bubble{max-width:78%;padding:10px 12px;border-radius:14px;background:#fff;border:1px solid #e5e7eb}.msg.mine .msg-bubble{background:#2563eb;color:#fff;border-color:#2563eb}.msg small{display:block;margin-top:3px;font-size:10px}.chat-system{font-size:12px;text-align:center;color:#6b7280;padding:6px}
+.group-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.group-code{font-family:ui-monospace,monospace;background:#eff6ff;padding:8px 10px;border-radius:10px;font-weight:800;letter-spacing:1px}
+.chip{display:inline-block;padding:5px 9px;border-radius:999px;background:#eef2ff;color:#3730a3;font-size:11px;font-weight:700;margin:3px}
+.tabrow{display:flex;gap:6px;overflow:auto;margin:10px 0}.tabrow button{white-space:nowrap}.tabrow button.active{background:#2563eb;color:#fff}
+.notice{background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:11px}.success{background:#ecfdf5;border:1px solid #a7f3d0;border-radius:12px;padding:11px}
+@media(max-width:520px){.chat-messages{height:320px}}
 </style>
 </head>
 <body>
-<header><div><b>Track Note</b><small>陸上競技の記録・練習・大会管理</small></div><button id="installBtn" style="display:none;background:#fff;color:#111827;padding:8px 10px">インストール</button></header>
+<header><div><b>陸メモ</b><small>陸上競技の記録・大会・練習・仲間をひとつに</small></div><button id="installBtn" style="display:none;background:#fff;color:#111827;padding:8px 10px">インストール</button></header>
 <main>
 <section id="home" class="screen active">
 <div class="home-profile" onclick="show('settings')">
   <img id="homeAvatar" class="home-avatar">
   <div><b id="homePlayer">選手</b><small>プロフィールを見る →</small></div>
 </div>
-<h1>ホーム</h1><div class="grid"><div class="stat"><small>練習</small><b id="wc">0</b></div><div class="stat"><small>大会</small><b id="mc">0</b></div></div><h2>自己ベスト</h2><div id="homePB"></div><h2>最近の大会</h2><div id="homeMeet"></div></section>
+<h1>ホーム</h1><div class="grid"><div class="stat"><small>練習</small><b id="wc">0</b></div><div class="stat"><small>大会</small><b id="mc">0</b></div></div><h2>自己ベスト</h2><div id="homePB"></div><h2>最近の大会</h2><div id="homeMeet"></div><div class="panel" style="margin-top:14px"><b>👥 仲間とつながる</b><p class="muted">グループを作って、記録共有やチャットを楽しもう。</p><button class="primary" onclick="show('group')">グループを開く</button></div></section>
 
 <section id="workout" class="screen"><h1>練習を記録</h1><div class="panel">
 <label>日付<input id="wd" type="date"></label><label>種目<select id="we"><option>100m</option><option>200m</option><option>400m</option><option>800m</option><option>1500m</option><option>3000m</option><option>5000m</option><option>10000m</option></select></label>
@@ -43,7 +52,10 @@ canvas{width:100%;height:230px}.badge{display:inline-block;background:#dcfce7;co
 <label><input id="mo" type="checkbox" checked> 公認記録</label><label>メモ<textarea id="mm"></textarea></label><button class="primary" style="width:100%" onclick="saveMeet()">大会結果を保存</button>
 </div><div class="panel"><h2>記録推移</h2><select id="ce" onchange="draw()"><option>100m</option><option>200m</option><option>400m</option><option>800m</option><option>1500m</option><option>3000m</option><option>5000m</option></select><canvas id="chart"></canvas></div><div id="meetList"></div></section>
 
-<section id="group" class="screen"><h1>グループ</h1><div id="groupArea"></div></section>
+<section id="group" class="screen">
+<h1>👥 グループ</h1>
+<div id="groupArea"></div>
+</section>
 
 <section id="settings" class="screen"><h1>プロフィール</h1>
 <div class="panel profile-card">
@@ -52,7 +64,7 @@ canvas{width:100%;height:230px}.badge{display:inline-block;background:#dcfce7;co
   <label>選手名<input id="player"></label>
   <button class="primary" style="width:100%" onclick="saveProfile()">プロフィールを保存</button>
 </div>
-<div class="panel"><h2>プロフィール</h2><div class="item"><img id="miniAvatar" class="mini-avatar"><div><b id="profileName">未設定</b><small>Track Note 選手プロフィール</small></div></div></div>
+<div class="panel"><h2>プロフィール</h2><div class="item"><img id="miniAvatar" class="mini-avatar"><div><b id="profileName">未設定</b><small>陸メモ 選手プロフィール</small></div></div></div>
 <button class="danger" onclick="resetAll()">すべてのデータを削除</button>
 </section>
 </main>
@@ -84,30 +96,110 @@ function draw(){
  x.strokeStyle='#2563eb';x.lineWidth=2.5;x.beginPath();d.forEach((a,i)=>{let px=d.length===1?w/2:L+(w-L-R)*i/(d.length-1),py=T+(h-T-B)*(a.time-lo)/(span);i?x.lineTo(px,py):x.moveTo(px,py)});x.stroke();
  d.forEach((a,i)=>{let px=d.length===1?w/2:L+(w-L-R)*i/(d.length-1),py=T+(h-T-B)*(a.time-lo)/(span);x.fillStyle='#2563eb';x.beginPath();x.arc(px,py,4,0,7);x.fill();x.fillStyle='#111827';x.font='11px sans-serif';x.textAlign='center';x.fillText(a.time.toFixed(2),px,py-8);x.fillStyle='#6b7280';x.fillText(a.date.slice(5),px,h-14)})
 }
+
+function syncCurrentProfileToGroup(){const g=getGroup();if(!g)return;const name=currentName();const avatar=localStorage.getItem('rj_avatar')||'';g.members=(g.members||[]).map((m,i)=>(i===0||m.owner)?{...m,name,avatar,owner:true}:m);put('g',g);}
+function escAttr(s){return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function getGroup(){return JSON.parse(localStorage.getItem(K.g)||'null')}
+function getChat(){return JSON.parse(localStorage.getItem('rj_chat')||'[]')}
+function putChat(v){localStorage.setItem('rj_chat',JSON.stringify(v))}
+function currentName(){return (localStorage.getItem(K.u)||'選手').trim()||'選手'}
+
 function group(){
- let g=JSON.parse(localStorage.getItem(K.g)||'null');
+ syncCurrentProfileToGroup();
+ let g=getGroup();
  if(!g){
-  groupArea.innerHTML='<div class="panel"><h2>グループを作る</h2><label>グループ名<input id="gn" placeholder="例：○○高校 陸上部"></label><label>自分の名前<input id="gm"></label><button class="primary" style="width:100%" onclick="createGroup()">作成</button></div><div class="panel"><h2>招待コードで参加</h2><label>コード<input id="jc" placeholder="RUN-AB12"></label><label>自分の名前<input id="jm"></label><button style="width:100%" onclick="joinGroup()">参加</button></div>';
+  groupArea.innerHTML=`
+  <div class="panel">
+    <h2>新しいグループを作る</h2>
+    <label>グループ名<input id="gn" placeholder="例：○○高校 陸上部"></label>
+    <label>説明<textarea id="gd" placeholder="チームの紹介や連絡事項"></textarea></label>
+    <button class="primary" style="width:100%" onclick="createGroup()">グループを作成</button>
+  </div>
+  <div class="panel">
+    <h2>招待コードで参加</h2>
+    <p class="muted">友達から受け取った招待コードを入力します。</p>
+    <label>招待コード<input id="jc" placeholder="RKUJ-AB12"></label>
+    <button style="width:100%" onclick="joinGroup()">参加する</button>
+  </div>`;
   return;
  }
- const avatar=localStorage.getItem(K.a);
- const me=localStorage.getItem(K.u)||'選手';
  const members=g.members||[];
- let memberHtml=members.map((name,i)=>{
-   const img=(i===0&&avatar)?`<img class="member-avatar" src="${avatar}">`:`<div class="member-avatar" style="display:flex;align-items:center;justify-content:center;font-size:20px">👤</div>`;
-   return `<div class="member-row">${img}<div><b>${esc(name)}</b><small>${i===0?'自分':'グループメンバー'}</small></div></div>`;
+ const chat=getChat();
+ const activeTab=localStorage.getItem('rj_group_tab')||'chat';
+ const memberHtml=members.map((m,i)=>{
+   const av=m.avatar ? `<img src="${escAttr(m.avatar)}" style="width:42px;height:42px;border-radius:50%;object-fit:cover">` : `<span style="font-size:20px">${i===0?'👑':'🏃'}</span>`;
+   return `<div class="member-row"><div class="member-avatar" style="display:flex;align-items:center;justify-content:center;overflow:hidden">${av}</div><div><b>${esc(m.name||'選手')}</b><small>${m.owner||i===0?'管理者':'メンバー'}${m.joinedAt?' ・ '+m.joinedAt:''}</small></div></div>`;
  }).join('');
- let records=get('m');
- groupArea.innerHTML=`<div class="panel"><h2>${esc(g.name)}</h2><p>招待コード：<b>${esc(g.code)}</b></p><button onclick="copyCode()">招待コードをコピー</button></div>
- <div class="panel"><h2>メンバー</h2>${memberHtml||'<p class="muted">まだメンバーがいません。</p>'}</div>
- <h2>共有フィード</h2>${records.slice(0,10).map(x=>'<div class="item"><b>'+esc(x.name)+' / '+esc(x.event)+' / '+x.time.toFixed(2)+'秒</b><small>'+x.date+(x.isPB?'　🏆 PB':'')+'</small></div>').join('')||'<p class="muted">まだ共有記録がありません。</p>'}`;
+ const feed=get('m').slice(0,12).map(x=>`<div class="item"><div><b>${esc(currentName())} / ${esc(x.event)} / ${Number(x.time).toFixed(2)}秒 ${x.isPB?'<span class="badge">PB</span>':''}</b><small>${esc(x.date)} ・ ${esc(x.name)}</small></div></div>`).join('') || '<p class="muted">まだ大会記録がありません。</p>';
+ const chatHtml=chat.length?chat.map(m=>`
+   <div class="msg ${m.name===currentName()?'mine':''}">
+     ${m.name!==currentName()?'<div class="member-avatar" style="width:34px;height:34px;display:flex;align-items:center;justify-content:center">🏃</div>':''}
+     <div class="msg-bubble"><b>${esc(m.name)}</b><div>${esc(m.text).replace(/\n/g,'<br>')}</div><small>${esc(m.time)}</small></div>
+   </div>`).join(''):'<div class="chat-system">まだメッセージはありません。最初の一言を送ってみましょう！</div>';
+ groupArea.innerHTML=`
+ <div class="panel">
+   <div class="group-head"><div><h2 style="margin:0">${esc(g.name)}</h2><small>${esc(g.description||'陸上仲間のグループ')}</small></div><button onclick="leaveGroup()">退出</button></div>
+   <div style="margin-top:12px">招待コード：<span class="group-code">${esc(g.code)}</span> <button onclick="copyCode()">コピー</button></div>
+ </div>
+ <div class="tabrow">
+   <button class="${activeTab==='chat'?'active':''}" onclick="setGroupTab('chat')">💬 チャット</button>
+   <button class="${activeTab==='feed'?'active':''}" onclick="setGroupTab('feed')">🏆 記録</button>
+   <button class="${activeTab==='members'?'active':''}" onclick="setGroupTab('members')">👥 メンバー</button>
+ </div>
+ ${activeTab==='chat'?`
+ <div class="panel">
+   <div class="chat-wrap">
+     <div id="chatMessages" class="chat-messages">${chatHtml}</div>
+     <div class="row"><input id="chatInput" placeholder="メッセージを入力…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat()}"><button class="primary" onclick="sendChat()">送信</button></div>
+     <small class="muted">※現在はこのブラウザ内で保存される試作版です。クラウド接続後は友達のスマホともリアルタイム共有できます。</small>
+   </div>
+ </div>`:
+ activeTab==='feed'?`
+ <div class="success"><b>🏃 グループ共有フィード</b><br><small>大会結果やPB更新をメンバーに共有する画面です。</small></div>
+ <h2>最近の記録</h2>${feed}`:
+ `<div class="panel"><h2>メンバー ${members.length}人</h2>${memberHtml}</div>`}
+ `;
+ const box=document.getElementById('chatMessages');if(box)box.scrollTop=box.scrollHeight;
 }
-function createGroup(){if(!gn.value||!gm.value)return alert('入力してください');put('g',{name:gn.value,code:'RUN-'+Math.random().toString(36).slice(2,6).toUpperCase(),members:[gm.value]});render()}
-function joinGroup(){if(!jc.value||!jm.value)return alert('入力してください');put('g',{name:'参加グループ',code:jc.value.toUpperCase(),members:[jm.value]});render();alert('参加しました（この試作版では同じ端末内の共有です）')}
-function copyCode(){let g=JSON.parse(localStorage.getItem(K.g));navigator.clipboard?.writeText(g.code);alert('招待コード：'+g.code)}
+
+function setGroupTab(tab){localStorage.setItem('rj_group_tab',tab);render()}
+function createGroup(){
+ const name=document.getElementById('gn')?.value.trim(), description=document.getElementById('gd')?.value.trim();
+ if(!name)return alert('グループ名を入力してください');
+ const code='RKUJ-'+Math.random().toString(36).slice(2,6).toUpperCase();
+ put('g',{id:uid(),name,description,code,createdAt:today(),members:[{name:currentName(),avatar:localStorage.getItem('rj_avatar')||'',joinedAt:today(),owner:true}]});
+ putChat([{name:'システム',text:`「${name}」グループを作成しました。`,time:new Date().toLocaleString('ja-JP')}]);
+ localStorage.setItem('rj_group_tab','chat');
+ render();
+ alert('グループを作成しました！招待コードを友達に送ってください。');
+}
+function joinGroup(){
+ const code=document.getElementById('jc')?.value.trim().toUpperCase();
+ if(!/^RKUJ-[A-Z0-9]{4}$/.test(code))return alert('招待コードの形式が正しくありません');
+ put('g',{id:uid(),name:'参加グループ',description:'招待コードで参加したグループ',code,createdAt:today(),members:[{name:currentName(),avatar:localStorage.getItem('rj_avatar')||'',joinedAt:today(),owner:true}]});
+ putChat([{name:'システム',text:`${currentName()}さんがグループに参加しました。`,time:new Date().toLocaleString('ja-JP')}]);
+ localStorage.setItem('rj_group_tab','chat');
+ render();
+ alert('グループに参加しました！');
+}
+function sendChat(){
+ const input=document.getElementById('chatInput');if(!input)return;
+ const text=input.value.trim();if(!text)return;
+ const a=getChat();a.push({id:uid(),name:currentName(),text,time:new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'})});
+ putChat(a.slice(-100));input.value='';render();
+}
+function copyCode(){
+ const g=getGroup();if(!g)return;
+ navigator.clipboard?.writeText(g.code);
+ alert('招待コード「'+g.code+'」をコピーしました！');
+}
+function leaveGroup(){
+ if(!confirm('このグループをこの端末から退出しますか？'))return;
+ localStorage.removeItem(K.g);localStorage.removeItem('rj_chat');render();
+}
 function saveProfile(){
  localStorage.setItem(K.u,player.value.trim()||'選手');
- render();
+ syncCurrentProfileToGroup();render();
  alert('プロフィールを保存しました！');
  show('settings');
 }
